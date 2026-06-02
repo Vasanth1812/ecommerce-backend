@@ -44,6 +44,13 @@ public class CategoryController {
 
     // ── Admin Endpoints ───────────────────────────────────
 
+    @GetMapping("/api/v1/admin/categories")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Get all categories (including inactive)")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllAdminCategories() {
+        return ResponseEntity.ok(ApiResponse.ok(categoryService.getAllAdminCategories()));
+    }
+
     @PostMapping("/api/v1/admin/categories")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin: Create category")

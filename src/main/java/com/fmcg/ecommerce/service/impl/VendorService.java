@@ -20,7 +20,8 @@ public class VendorService {
 
     @Transactional(readOnly = true)
     public Page<VendorResponse> getVendors(String search, String status, Pageable pageable) {
-        return vendorRepository.searchVendors(search, status, pageable).map(this::toResponse);
+        String safeSearch = search != null ? search : "";
+        return vendorRepository.searchVendors(safeSearch, status, pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -84,5 +85,21 @@ public class VendorService {
                 .createdAt(vendor.getCreatedAt())
                 .updatedAt(vendor.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional
+    public VendorResponse approveVendor(Long id) {
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", id));
+        vendor.setStatus("ACTIVE");
+        return toResponse(vendorRepository.save(vendor));
+    }
+
+    @Transactional
+    public VendorResponse rejectVendor(Long id) {
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", id));
+        vendor.setStatus("REJECTED");
+        return toResponse(vendorRepository.save(vendor));
     }
 }

@@ -49,13 +49,16 @@ public class AdminInventoryController {
     @PostMapping("/adjust")
     @Operation(summary = "Adjust stock (IN / OUT / ADJUSTMENT)")
     public ResponseEntity<ApiResponse<Inventory>> adjustStock(
-            @RequestParam Long productId,
-            @RequestParam Long warehouseId,
-            @RequestParam Integer qty,
-            @RequestParam String movementType,
-            @RequestParam(required = false) String reason,
+            @RequestBody Map<String, Object> payload,
             Authentication auth) {
-        Inventory updated = inventoryService.adjustStock(productId, warehouseId, qty, movementType, reason, auth.getName());
+        Long productId = payload.get("productId") != null ? Long.valueOf(payload.get("productId").toString()) : null;
+        Long warehouseId = payload.get("warehouseId") != null ? Long.valueOf(payload.get("warehouseId").toString()) : null;
+        Integer qty = payload.get("quantity") != null ? Integer.valueOf(payload.get("quantity").toString()) : null;
+        String movementType = payload.get("type") != null ? payload.get("type").toString() : null;
+        String reason = payload.get("reason") != null ? payload.get("reason").toString() : null;
+        String expiryDate = payload.get("expiryDate") != null ? payload.get("expiryDate").toString() : null;
+        
+        Inventory updated = inventoryService.adjustStock(productId, warehouseId, qty, movementType, reason, auth.getName(), expiryDate);
         return ResponseEntity.ok(ApiResponse.ok("Stock adjusted successfully", updated));
     }
 

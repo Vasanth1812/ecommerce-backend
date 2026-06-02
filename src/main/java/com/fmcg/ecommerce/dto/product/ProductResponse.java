@@ -30,7 +30,7 @@ public class ProductResponse {
     private String unit;
     private String weight;
     private String status;
-    private String tags;
+    private List<String> tags;
     private String warehouse;
     private String supplier;
     private List<ProductImageDto> images;

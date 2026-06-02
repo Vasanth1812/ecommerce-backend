@@ -78,4 +78,16 @@ public class AdminVendorController {
         data.put("settlements", List.of());
         return ResponseEntity.ok(ApiResponse.ok(data));
     }
+
+    @PostMapping("/{id}/approve")
+    @Operation(summary = "Approve a pending vendor")
+    public ResponseEntity<ApiResponse<VendorResponse>> approveVendor(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok("Vendor approved successfully", vendorService.approveVendor(id)));
+    }
+
+    @PostMapping("/{id}/reject")
+    @Operation(summary = "Reject a pending vendor")
+    public ResponseEntity<ApiResponse<VendorResponse>> rejectVendor(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok("Vendor rejected successfully", vendorService.rejectVendor(id)));
+    }
 }

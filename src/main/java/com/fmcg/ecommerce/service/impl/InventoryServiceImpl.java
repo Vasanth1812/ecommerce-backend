@@ -41,7 +41,7 @@ public class InventoryServiceImpl {
 
     @Transactional
     public Inventory adjustStock(Long productId, Long warehouseId, Integer qty,
-                                  String movementType, String reason, String adminEmail) {
+                                 String movementType, String reason, String adminEmail, String expiryDate) {
         if (!productRepository.existsById(productId))
             throw new ResourceNotFoundException("Product", productId);
         Warehouse warehouse = warehouseRepository.findById(warehouseId)

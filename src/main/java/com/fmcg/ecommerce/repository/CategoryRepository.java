@@ -12,6 +12,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByParentIdIsNullAndIsActiveTrueOrderBySortOrderAsc();
     List<Category> findByParentIdAndIsActiveTrueOrderBySortOrderAsc(Long parentId);
     List<Category> findByIsActiveTrueOrderBySortOrderAsc();
+    List<Category> findAllByOrderBySortOrderAsc();
     Optional<Category> findBySlug(String slug);
     boolean existsBySlug(String slug);
     boolean existsBySlugAndIdNot(String slug, Long id);

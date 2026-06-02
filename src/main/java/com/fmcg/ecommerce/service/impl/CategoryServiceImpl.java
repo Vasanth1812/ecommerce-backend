@@ -29,6 +29,11 @@ public class CategoryServiceImpl {
                 .stream().map(c -> toResponse(c, false)).collect(Collectors.toList());
     }
 
+    public List<CategoryResponse> getAllAdminCategories() {
+        return categoryRepository.findAllByOrderBySortOrderAsc()
+                .stream().map(c -> toResponse(c, false)).collect(Collectors.toList());
+    }
+
     public CategoryResponse getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id));
@@ -121,7 +126,7 @@ public class CategoryServiceImpl {
                 .gstRate(c.getGstRate())
                 .sortOrder(c.getSortOrder())
                 .isActive(Boolean.TRUE.equals(c.getIsActive()))
-                .productCount(0)
+                .productCount(productRepository.countByCategoryId(c.getId()))
                 .children(new ArrayList<>())
                 .build();
         if (withChildren) {

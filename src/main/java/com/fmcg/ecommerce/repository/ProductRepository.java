@@ -18,6 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByBarcode(String barcode);
     boolean existsBySku(String sku);
     boolean existsBySkuAndIdNot(String sku, Long id);
+    int countByCategoryId(Long categoryId);
 
     @Query(value = "SELECT * FROM products p WHERE " +
            "( CAST(:search AS text) IS NULL " +
@@ -31,7 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "AND ( CAST(:brand AS text)    IS NULL OR LOWER(p.brand) LIKE LOWER(CONCAT('%', CAST(:brand AS text), '%')) ) " +
            "AND ( CAST(:minPrice AS numeric) IS NULL OR p.price >= CAST(:minPrice AS numeric) ) " +
            "AND ( CAST(:maxPrice AS numeric) IS NULL OR p.price <= CAST(:maxPrice AS numeric) ) " +
-           "ORDER BY p.created_at DESC",
+           "ORDER BY p.created_at DESC, p.id DESC",
            countQuery = "SELECT COUNT(*) FROM products p WHERE " +
            "( CAST(:search AS text) IS NULL " +
            "  OR LOWER(p.title)   LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) " +

@@ -4,6 +4,7 @@ import com.fmcg.ecommerce.common.ApiResponse;
 import com.fmcg.ecommerce.common.PagedResponse;
 import com.fmcg.ecommerce.dto.product.ProductRequest;
 import com.fmcg.ecommerce.dto.product.ProductResponse;
+import com.fmcg.ecommerce.dto.product.UpdateProductPricingRequest;
 import com.fmcg.ecommerce.service.impl.BulkImportServiceImpl;
 import com.fmcg.ecommerce.service.impl.ProductServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,13 +43,14 @@ public class ProductController {
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
 
+        int pageNo = page > 0 ? page - 1 : 0;
         Page<ProductResponse> products = productService.getProducts(
-                search, status, categoryId, brand, minPrice, maxPrice, page, size, sortBy, sortDir);
+                search, status, categoryId, brand, minPrice, maxPrice, pageNo, size, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(products)));
     }
 
@@ -68,11 +70,12 @@ public class ProductController {
     @Operation(summary = "Search products")
     public ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> searchProducts(
             @RequestParam String q,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size) {
 
+        int pageNo = page > 0 ? page - 1 : 0;
         Page<ProductResponse> products = productService.getProducts(
-                q, "ACTIVE", null, null, null, null, page, size, "createdAt", "desc");
+                q, "ACTIVE", null, null, null, null, pageNo, size, "createdAt", "desc");
         return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(products)));
     }
 
@@ -102,6 +105,14 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.ok("Product updated", productService.updateProduct(id, request)));
     }
 
+    @PatchMapping("/api/v1/admin/products/{id}/pricing")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Update product pricing")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProductPricing(
+            @PathVariable Long id, @Valid @RequestBody UpdateProductPricingRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok("Product pricing updated", productService.updateProductPricing(id, request)));
+    }
+
     @DeleteMapping("/api/v1/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin: Delete product")
@@ -127,6 +138,56 @@ public class ProductController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"product_import_template.csv\"")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @GetMapping("/api/v1/admin/products/import/history")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Get bulk import history")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> getProductImportHistory() {
+        // Mocking history for now
+        java.util.Map<String, Object> mockHistory = new java.util.HashMap<>();
+        mockHistory.put("id", 1L);
+        mockHistory.put("filename", "products_upload.csv");
+        mockHistory.put("status", "COMPLETED");
+        mockHistory.put("timestamp", java.time.LocalDateTime.now().toString());
+        return ResponseEntity.ok(ApiResponse.ok(java.util.Arrays.asList(mockHistory)));
+    }
+
+    @PostMapping(value = "/api/v1/admin/products/{id}/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Upload product media")
+    public ResponseEntity<ApiResponse<com.fmcg.ecommerce.entity.ProductImage>> uploadProductMedia(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "false") Boolean isPrimary,
+            @RequestParam(required = false) String alt,
+            @RequestParam(defaultValue = "0") Integer sortOrder) {
+        return ResponseEntity.ok(ApiResponse.ok("Media uploaded successfully", 
+                productService.uploadProductMedia(id, file, isPrimary, alt, sortOrder)));
+    }
+
+    @DeleteMapping("/api/v1/admin/products/media/{mediaId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Delete product media")
+    public ResponseEntity<ApiResponse<Void>> deleteProductMedia(@PathVariable Long mediaId) {
+        productService.deleteProductMedia(mediaId);
+        return ResponseEntity.ok(ApiResponse.ok("Media deleted successfully"));
+    }
+
+    @PatchMapping("/api/v1/admin/products/media/{mediaId}/primary")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Set primary product media")
+    public ResponseEntity<ApiResponse<Void>> setPrimaryProductMedia(@PathVariable Long mediaId) {
+        productService.setPrimaryProductMedia(mediaId);
+        return ResponseEntity.ok(ApiResponse.ok("Primary media updated successfully"));
+    }
+
+    @GetMapping("/api/v1/admin/products/audit-logs")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Get product audit logs")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> getProductAuditLogs(
+            @RequestParam(required = false) Long productId) {
+        return ResponseEntity.ok(ApiResponse.ok(productService.getProductAuditLogs(productId)));
     }
 
     // ── SEO Management ────────────────────────────────────────
