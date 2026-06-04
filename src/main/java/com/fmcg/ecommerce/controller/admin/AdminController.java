@@ -25,16 +25,7 @@ public class AdminController {
 
     private final AdminServiceImpl adminService;
 
-    // ── Dashboard ─────────────────────────────────────────
-
-    @GetMapping("/api/v1/admin/dashboard/overview")
-    @Operation(summary = "Get dashboard overview stats")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboard(
-            @RequestParam(defaultValue = "30d") String period) {
-        return ResponseEntity.ok(ApiResponse.ok(adminService.getDashboardOverview(period)));
-    }
-
-    // ── Customers ─────────────────────────────────────────
+    // 🏪 Customers ════════════════════════════════════════════════════════════════════════════════─────────────────────────────────────────
 
     @GetMapping("/api/v1/admin/customers")
     @Operation(summary = "Get all customers with search and filter")

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -15,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByMobile(String mobile);
     boolean existsByEmail(String email);
+    
+    long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     boolean existsByMobile(String mobile);
     long countByRole(String role);
     long countByStatus(String status);

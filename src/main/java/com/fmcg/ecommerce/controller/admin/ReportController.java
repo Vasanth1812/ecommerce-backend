@@ -142,19 +142,60 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.ok(reportService.getRevenueSummary()));
     }
 
-    // --- Promotion ROI ---
+    // --- Promotions ---
     @GetMapping("/promotions")
     @Operation(summary = "Get promotion ROI reports")
-    public ResponseEntity<ApiResponse<PagedResponse<PromotionROIEntry>>> getPromotionROIData(
+    public ResponseEntity<ApiResponse<PagedResponse<PromotionROIEntry>>> getPromotionReports(
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        Page<PromotionROIEntry> result = reportService.getPromotionROIData(PageRequest.of(page > 0 ? page - 1 : 0, pageSize));
+        Page<PromotionROIEntry> result = reportService.getPromotionReports(search, PageRequest.of(page > 0 ? page - 1 : 0, pageSize));
         return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(result)));
     }
 
     @GetMapping("/promotions/summary")
-    @Operation(summary = "Get promotion ROI summary statistics")
-    public ResponseEntity<ApiResponse<PromotionROISummary>> getPromotionROISummary() {
-        return ResponseEntity.ok(ApiResponse.ok(reportService.getPromotionROISummary()));
+    @Operation(summary = "Get promotion summary statistics")
+    public ResponseEntity<ApiResponse<PromotionROISummary>> getPromotionSummary() {
+        return ResponseEntity.ok(ApiResponse.ok(reportService.getPromotionSummary()));
+    }
+
+    // --- Sales ---
+    @GetMapping("/sales/summary")
+    @Operation(summary = "Get sales overview statistics")
+    public ResponseEntity<ApiResponse<SalesSummary>> getSalesSummary(
+            @RequestParam(defaultValue = "30d") String period) {
+        return ResponseEntity.ok(ApiResponse.ok(reportService.getSalesSummary(period)));
+    }
+
+    // --- Inventory ---
+    @GetMapping("/inventory")
+    @Operation(summary = "Get detailed inventory valuation and status")
+    public ResponseEntity<ApiResponse<PagedResponse<InventoryReportEntry>>> getInventoryReport(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        Page<InventoryReportEntry> result = reportService.getInventoryReport(search, PageRequest.of(page > 0 ? page - 1 : 0, pageSize));
+        return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(result)));
+    }
+
+    @GetMapping("/inventory/summary")
+    @Operation(summary = "Get inventory summary statistics")
+    public ResponseEntity<ApiResponse<InventorySummary>> getInventorySummary() {
+        return ResponseEntity.ok(ApiResponse.ok(reportService.getInventorySummary()));
+    }
+
+    // --- Export ---
+    @GetMapping("/{type}/export")
+    @Operation(summary = "Export a specific report to CSV or Excel")
+    public ResponseEntity<byte[]> exportReport(
+            @org.springframework.web.bind.annotation.PathVariable String type,
+            @RequestParam(defaultValue = "csv") String format) {
+        byte[] fileBytes = reportService.exportReport(type, format);
+        
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + type + "_report." + format);
+        headers.set(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+        
+        return new ResponseEntity<>(fileBytes, headers, org.springframework.http.HttpStatus.OK);
     }
 }

@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByOrderNumber(String orderNumber);
     Page<Order> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    
+    long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
 
     @Query(value = "SELECT * FROM orders o WHERE o.user_id = :userId " +
            "AND ( CAST(:status AS text) IS NULL OR o.status = CAST(:status AS text) ) " +

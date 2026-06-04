@@ -203,7 +203,7 @@ public class ReportService {
 
     // --- Promotion ROI ---
     @Transactional(readOnly = true)
-    public Page<PromotionROIEntry> getPromotionROIData(Pageable pageable) {
+    public Page<PromotionROIEntry> getPromotionReports(String search, Pageable pageable) {
         List<PromotionROIEntry> list = new ArrayList<>();
         list.add(PromotionROIEntry.builder()
                 .id("1").promotionName("Summer Sale 2024").type("percentage")
@@ -216,7 +216,7 @@ public class ReportService {
     }
 
     @Transactional(readOnly = true)
-    public PromotionROISummary getPromotionROISummary() {
+    public PromotionROISummary getPromotionSummary() {
         return PromotionROISummary.builder()
                 .totalPromotions(24)
                 .totalCost(new BigDecimal("120000"))
@@ -226,5 +226,48 @@ public class ReportService {
                 .highestROI(new BigDecimal("2500.0"))
                 .totalRedemptions(5400)
                 .build();
+    }
+
+    // --- Sales Reports ---
+    @Transactional(readOnly = true)
+    public SalesSummary getSalesSummary(String period) {
+        // Mock data logic for sales summary (similar to other reports)
+        return SalesSummary.builder()
+                .totalRevenue(new BigDecimal("12456890.00"))
+                .totalOrders(245678)
+                .averageOrderValue(new BigDecimal("500.00"))
+                .totalDiscounts(new BigDecimal("150000.00"))
+                .totalTax(new BigDecimal("225000.00"))
+                .build();
+    }
+
+    // --- Inventory Reports ---
+    @Transactional(readOnly = true)
+    public Page<InventoryReportEntry> getInventoryReport(String search, Pageable pageable) {
+        List<InventoryReportEntry> list = new ArrayList<>();
+        list.add(InventoryReportEntry.builder()
+                .productId("PRD-001").sku("GROC-WHT-001").productName("Whole Wheat Flour")
+                .category("Groceries").qtyAvailable(150).qtyReserved(10)
+                .unitCost(new BigDecimal("40.00")).stockValue(new BigDecimal("6000.00"))
+                .status("IN_STOCK")
+                .build());
+        return new PageImpl<>(list, pageable, list.size());
+    }
+
+    @Transactional(readOnly = true)
+    public InventorySummary getInventorySummary() {
+        return InventorySummary.builder()
+                .totalProducts(450)
+                .lowStockItems(15)
+                .outOfStockItems(5)
+                .totalValuation(new BigDecimal("4500000.00"))
+                .build();
+    }
+
+    // --- Export ---
+    public byte[] exportReport(String reportType, String format) {
+        // Return a mock CSV byte array representing an exported report
+        String csvContent = "Id,Name,Value\n1,Test Report," + reportType;
+        return csvContent.getBytes();
     }
 }

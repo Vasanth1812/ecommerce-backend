@@ -10,6 +10,49 @@ import java.util.List;
 
 public class ReportDTO {
 
+    // --- Sales Reports ---
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class SalesReportEntry {
+        private String date;
+        private Integer orders;
+        private BigDecimal grossRevenue;
+        private BigDecimal netRevenue;
+        private BigDecimal discounts;
+        private BigDecimal tax;
+        private BigDecimal shipping;
+    }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class SalesSummary {
+        private BigDecimal totalRevenue;
+        private Integer totalOrders;
+        private BigDecimal averageOrderValue;
+        private BigDecimal totalDiscounts;
+        private BigDecimal totalTax;
+    }
+
+    // --- Inventory Reports ---
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class InventoryReportEntry {
+        private String productId;
+        private String sku;
+        private String productName;
+        private String category;
+        private Integer qtyAvailable;
+        private Integer qtyReserved;
+        private BigDecimal unitCost;
+        private BigDecimal stockValue;
+        private String status; // IN_STOCK, LOW_STOCK, OUT_OF_STOCK
+    }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class InventorySummary {
+        private Integer totalProducts;
+        private Integer lowStockItems;
+        private Integer outOfStockItems;
+        private BigDecimal totalValuation;
+    }
+
     // --- GST Reports ---
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class GSTReportEntry {
