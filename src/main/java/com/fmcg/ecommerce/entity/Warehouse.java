@@ -31,6 +31,36 @@ public class Warehouse {
 
     private BigDecimal lng;
 
+    @Column
+    private Integer capacity;
+
+    @Column
+    private Integer usedCapacity = 0;
+
+    @Column
+    private String shortLocation;
+
+    @Column
+    private String city;
+
+    @Column
+    private String state;
+
+    @Column
+    private String pincode;
+
+    @Column
+    private Integer staffCount;
+
+    @Column
+    private String operatingHours;
+
+    @Column
+    private String managerName;
+
+    @Column
+    private String contactNumber;
+
     @Builder.Default
     private Boolean isActive = true;
 
