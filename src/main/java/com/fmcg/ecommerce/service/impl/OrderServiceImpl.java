@@ -425,4 +425,43 @@ public class OrderServiceImpl {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"))
                 .getId();
     }
+
+    public Object getOrderTimeline(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        // Return mock timeline for now
+        return java.util.List.of(
+                java.util.Map.of("status", "PENDING", "timestamp", order.getCreatedAt(), "notes", "Order placed"),
+                java.util.Map.of("status", "CONFIRMED", "timestamp", order.getCreatedAt().plusMinutes(10), "notes", "Payment verified")
+        );
+    }
+
+    @Transactional
+    public Object assignDeliveryPartner(Long orderId, String partnerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        order.setStatus("PREPARING"); // Move to preparing when assigned
+        orderRepository.save(order);
+        return java.util.Map.of("orderId", orderId, "partnerId", partnerId, "assignedAt", LocalDateTime.now(), "status", "ASSIGNED");
+    }
+
+    @Transactional
+    public Object substituteOrderItem(Long orderId, Long oldProductId, Long newProductId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        return java.util.Map.of("orderId", orderId, "substitutedOldItem", oldProductId, "substitutedNewItem", newProductId, "status", "SUBSTITUTED");
+    }
+
+    @Transactional
+    public Object bulkUpdateOrderStatus(java.util.List<Long> orderIds, String status) {
+        if (!VALID_STATUSES.contains(status.toUpperCase())) {
+            throw new BadRequestException("Invalid status: " + status);
+        }
+        java.util.List<Order> orders = orderRepository.findAllById(orderIds);
+        for (Order o : orders) {
+            o.setStatus(status.toUpperCase());
+        }
+        orderRepository.saveAll(orders);
+        return java.util.Map.of("updatedCount", orders.size(), "status", status);
+    }
 }

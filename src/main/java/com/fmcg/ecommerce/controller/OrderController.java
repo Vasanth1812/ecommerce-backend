@@ -126,4 +126,41 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok("Status updated",
                 orderService.adminUpdateStatus(id, request, auth.getName())));
     }
+
+    // --- Phase 2: Order Fulfillment Workflows ---
+
+    @GetMapping("/api/v1/admin/orders/{id}/timeline")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Retrieve order status history timeline")
+    public ResponseEntity<ApiResponse<Object>> getOrderTimeline(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(orderService.getOrderTimeline(id)));
+    }
+
+    @PostMapping("/api/v1/admin/orders/{id}/assign-partner")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Assign delivery fleets/riders to an order")
+    public ResponseEntity<ApiResponse<Object>> assignDeliveryPartner(
+            @PathVariable Long id,
+            @RequestParam String partnerId) {
+        return ResponseEntity.ok(ApiResponse.ok(orderService.assignDeliveryPartner(id, partnerId)));
+    }
+
+    @PostMapping("/api/v1/admin/orders/{id}/substitute")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Replace out-of-stock items in an order")
+    public ResponseEntity<ApiResponse<Object>> substituteItem(
+            @PathVariable Long id,
+            @RequestParam Long oldProductId,
+            @RequestParam Long newProductId) {
+        return ResponseEntity.ok(ApiResponse.ok(orderService.substituteOrderItem(id, oldProductId, newProductId)));
+    }
+
+    @PostMapping("/api/v1/admin/orders/bulk")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Bulk update multiple order statuses at once")
+    public ResponseEntity<ApiResponse<Object>> bulkUpdateOrderStatus(
+            @RequestBody java.util.List<Long> orderIds,
+            @RequestParam String status) {
+        return ResponseEntity.ok(ApiResponse.ok(orderService.bulkUpdateOrderStatus(orderIds, status)));
+    }
 }

@@ -113,7 +113,7 @@ public class AdminInventoryController {
 
     @PostMapping("/transfers")
     @Operation(summary = "Log stock transfer between warehouses")
-    public ResponseEntity<ApiResponse<com.fmcg.ecommerce.entity.StockTransfer>> transferStock(@RequestBody com.fmcg.ecommerce.dto.inventory.StockTransferDto dto) {
+    public ResponseEntity<ApiResponse<com.fmcg.ecommerce.dto.inventory.StockTransferDto>> transferStock(@RequestBody com.fmcg.ecommerce.dto.inventory.StockTransferDto dto) {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.transferStock(dto)));
     }
 

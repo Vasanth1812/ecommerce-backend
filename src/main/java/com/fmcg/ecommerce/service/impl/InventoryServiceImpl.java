@@ -152,7 +152,7 @@ public class InventoryServiceImpl {
     }
 
     @Transactional
-    public com.fmcg.ecommerce.entity.StockTransfer transferStock(com.fmcg.ecommerce.dto.inventory.StockTransferDto dto) {
+    public com.fmcg.ecommerce.dto.inventory.StockTransferDto transferStock(com.fmcg.ecommerce.dto.inventory.StockTransferDto dto) {
         com.fmcg.ecommerce.repository.StockTransferRepository stockTransferRepo = 
             org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()
             .getAttribute("org.springframework.web.servlet.DispatcherServlet.CONTEXT", 0) != null ? 
@@ -177,15 +177,31 @@ public class InventoryServiceImpl {
                 .build();
 
         if (stockTransferRepo != null) {
-            return stockTransferRepo.save(transfer);
+            transfer = stockTransferRepo.save(transfer);
         }
-        return transfer; 
+        
+        return com.fmcg.ecommerce.dto.inventory.StockTransferDto.builder()
+                .id(transfer.getId())
+                .transferNumber(transfer.getTransferNumber())
+                .productId(product.getId())
+                .productName(product.getTitle())
+                .fromWarehouseId(from.getId())
+                .fromWarehouseName(from.getName())
+                .toWarehouseId(to.getId())
+                .toWarehouseName(to.getName())
+                .quantity(transfer.getQuantity())
+                .status(transfer.getStatus())
+                .notes(transfer.getNotes())
+                .createdAt(transfer.getCreatedAt())
+                .completedAt(transfer.getCompletedAt())
+                .build();
     }
 
     @Transactional
     public Inventory updateSafetyStock(Long inventoryId, Integer safetyStock) {
         Inventory inv = inventoryRepository.findById(inventoryId).orElseThrow(() -> new ResourceNotFoundException("Inventory", inventoryId));
-        inv.setReorderPoint(safetyStock);
+        inv.setSafetyStock(safetyStock); // Store it in the safety_stock column
+        inv.setReorderPoint(safetyStock); // Keep it identical to the reorder point so Low Stock alerts keep triggering correctly!
         return inventoryRepository.save(inv);
     }
 
