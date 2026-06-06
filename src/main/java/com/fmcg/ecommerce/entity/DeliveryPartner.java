@@ -1,20 +1,19 @@
 package com.fmcg.ecommerce.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "cart_items")
+@Table(name = "delivery_partners")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CartItem {
+public class DeliveryPartner {
 
     @Column(name = "public_id", unique = true, updatable = false)
     private String publicId;
@@ -30,29 +29,28 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id", nullable = false)
-    @JsonIgnoreProperties({"items", "user", "appliedCoupon"})
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Cart cart;
+    private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    @JsonIgnoreProperties({"images", "category"})
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Product product;
+    private String vehicleType;
+    private String vehicleNumber;
 
-    private String sku;
-
+    @Builder.Default
     @Column(nullable = false)
-    private Integer qty;
+    private String availabilityStatus = "FREE"; // FREE, ASSIGNED, OFFLINE
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal unitPrice;
+    private Double currentLat;
+    private Double currentLng;
+
+    private LocalDateTime lastLocationUpdate;
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime addedAt;
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

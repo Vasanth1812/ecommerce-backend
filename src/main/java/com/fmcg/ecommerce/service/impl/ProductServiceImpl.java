@@ -99,6 +99,7 @@ public class ProductServiceImpl {
         Product product = Product.builder()
                 .sku(request.getSku())
                 .barcode(request.getBarcode())
+                .itemCode(request.getItemCode())
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .shortDescription(request.getShortDescription())
@@ -135,6 +136,7 @@ public class ProductServiceImpl {
 
         product.setSku(request.getSku());
         product.setBarcode(request.getBarcode());
+        product.setItemCode(request.getItemCode());
         product.setTitle(request.getTitle());
         product.setDescription(request.getDescription());
         product.setShortDescription(request.getShortDescription());
@@ -188,7 +190,7 @@ public class ProductServiceImpl {
         productRepository.delete(product);
     }
 
-    // ── Mapper ──────────────────────────────────────────
+    // â”€â”€ Mapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public ProductResponse toResponse(Product product) {
         Optional<Inventory> inventoryOpt = inventoryRepository.findByProductId(product.getId());
@@ -212,6 +214,7 @@ public class ProductServiceImpl {
                 product.getImages().stream()
                         .map(img -> ProductImageDto.builder()
                                 .id(img.getId())
+                .publicId(img.getPublicId())
                                 .url(img.getUrl())
                                 .alt(img.getAlt())
                                 .isPrimary(Boolean.TRUE.equals(img.getIsPrimary()))
@@ -221,8 +224,10 @@ public class ProductServiceImpl {
 
         return ProductResponse.builder()
                 .id(product.getId())
+                .publicId(product.getPublicId())
                 .sku(product.getSku())
                 .barcode(product.getBarcode())
+                .itemCode(product.getItemCode())
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .shortDescription(product.getShortDescription())
@@ -246,7 +251,7 @@ public class ProductServiceImpl {
                 .build();
     }
 
-    // ── SEO Management ────────────────────────────────────────
+    // â”€â”€ SEO Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional(readOnly = true)
     public List<com.fmcg.ecommerce.dto.product.ProductSeoDto> getProductSeos(String search) {

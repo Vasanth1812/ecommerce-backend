@@ -1,19 +1,20 @@
 package com.fmcg.ecommerce.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "loyalty_transactions")
+@Table(name = "marketing_campaigns")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoyaltyTransaction {
+public class MarketingCampaign {
 
     @Column(name = "public_id", unique = true, updatable = false)
     private String publicId;
@@ -29,27 +30,27 @@ public class LoyaltyTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties({"addresses", "cart", "orders", "loyaltyAccount", "passwordHash"})
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private User user;
-
-    private Long orderId;
+    @Column(nullable = false, unique = true)
+    private String name;
 
     @Column(nullable = false)
-    private String action; // EARN / BURN / EXPIRE / BONUS
+    private String channels; // e.g. "EMAIL,PUSH,SMS"
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal budget;
 
     @Builder.Default
-    private Integer pointsEarned = 0;
+    @Column(nullable = false)
+    private String status = "DRAFT"; // DRAFT, SCHEDULED, ACTIVE, COMPLETED
 
-    @Builder.Default
-    private Integer pointsBurned = 0;
+    private LocalDateTime startDate;
 
-    private String description;
+    private LocalDateTime endDate;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

@@ -14,6 +14,16 @@ import java.time.LocalDateTime;
 @Builder
 public class SupportTicket {
 
+    @Column(name = "public_id", unique = true, updatable = false)
+    private String publicId;
+
+    @PrePersist
+    protected void onCreatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = java.util.UUID.randomUUID().toString();
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

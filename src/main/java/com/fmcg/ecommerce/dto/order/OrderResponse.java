@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderResponse {
     private Long id;
+    private String publicId;
     private String orderNumber;
     private String status;
     private String paymentMethod;

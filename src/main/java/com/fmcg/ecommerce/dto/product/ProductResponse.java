@@ -15,8 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductResponse {
     private Long id;
+    private String publicId;
     private String sku;
     private String barcode;
+    private String itemCode;
     private String title;
     private String description;
     private String shortDescription;

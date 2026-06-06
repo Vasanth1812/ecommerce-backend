@@ -14,6 +14,8 @@ import com.fmcg.ecommerce.repository.AuthTokenRepository;
 import com.fmcg.ecommerce.repository.LoyaltyAccountRepository;
 import com.fmcg.ecommerce.repository.OtpSessionRepository;
 import com.fmcg.ecommerce.repository.UserRepository;
+import com.fmcg.ecommerce.repository.DeliveryPartnerRepository;
+import com.fmcg.ecommerce.entity.DeliveryPartner;
 import com.fmcg.ecommerce.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +36,12 @@ public class AuthServiceImpl {
     private final OtpSessionRepository otpSessionRepository;
     private final AuthTokenRepository authTokenRepository;
     private final LoyaltyAccountRepository loyaltyAccountRepository;
+    private final DeliveryPartnerRepository deliveryPartnerRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final EmailServiceImpl emailService;
 
-    // ── Register (email + password) ───────────────────────
+    // â”€â”€ Register (email + password) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -57,7 +60,7 @@ public class AuthServiceImpl {
                 .email(email)
                 .mobile(request.getMobile() != null ? request.getMobile().trim() : null)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role("CUSTOMER")
+                .role(request.getRole() != null && !request.getRole().trim().isEmpty() ? request.getRole().trim().toUpperCase() : "CUSTOMER")
                 .status("ACTIVE")
                 .build();
         user = userRepository.save(user);
@@ -74,11 +77,22 @@ public class AuthServiceImpl {
             return loyaltyAccountRepository.save(loyalty);
         });
 
+        // Auto-create delivery partner profile if registered as a delivery boy
+        if ("DELIVERY_BOY".equals(user.getRole())) {
+            deliveryPartnerRepository.findByUserId(user.getId()).orElseGet(() -> {
+                DeliveryPartner dp = DeliveryPartner.builder()
+                        .user(finalUser)
+                        .availabilityStatus("FREE")
+                        .build();
+                return deliveryPartnerRepository.save(dp);
+            });
+        }
+
         log.info("New user registered: {}", email);
         return generateTokensForUser(user);
     }
 
-    // ── Login (email/mobile + password) ──────────────────
+    // â”€â”€ Login (email/mobile + password) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
@@ -103,7 +117,7 @@ public class AuthServiceImpl {
         return generateTokensForUser(user);
     }
 
-    // ── Send OTP ─────────────────────────────────────────
+    // â”€â”€ Send OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public String sendOtp(SendOtpRequest request) {
@@ -145,7 +159,7 @@ public class AuthServiceImpl {
         return "OTP sent successfully to " + maskIdentifier(identifier);
     }
 
-    // ── Verify OTP ────────────────────────────────────────
+    // â”€â”€ Verify OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public AuthResponse verifyOtp(VerifyOtpRequest request) {
@@ -198,10 +212,21 @@ public class AuthServiceImpl {
             return loyaltyAccountRepository.save(loyalty);
         });
 
+        // Auto-create delivery partner profile if registered as a delivery boy
+        if ("DELIVERY_BOY".equals(user.getRole())) {
+            deliveryPartnerRepository.findByUserId(user.getId()).orElseGet(() -> {
+                DeliveryPartner dp = DeliveryPartner.builder()
+                        .user(user)
+                        .availabilityStatus("FREE")
+                        .build();
+                return deliveryPartnerRepository.save(dp);
+            });
+        }
+
         return generateTokensForUser(user);
     }
 
-    // ── Refresh Token ─────────────────────────────────────
+    // â”€â”€ Refresh Token â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public AuthResponse refreshToken(RefreshTokenRequest request) {
@@ -223,7 +248,7 @@ public class AuthServiceImpl {
         return generateTokensForUser(user);
     }
 
-    // ── Logout ────────────────────────────────────────────
+    // â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public void logout(String refreshToken) {
@@ -234,7 +259,7 @@ public class AuthServiceImpl {
                 });
     }
 
-    // ── Get Profile ───────────────────────────────────────
+    // â”€â”€ Get Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public UserSummaryDto getProfile(String email) {
         User user = userRepository.findByEmail(email)
@@ -243,7 +268,7 @@ public class AuthServiceImpl {
         return toUserSummary(user);
     }
 
-    // ── Helpers ───────────────────────────────────────────
+    // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private AuthResponse generateTokensForUser(User user) {
         String accessToken = jwtUtil.generateAccessToken(
@@ -273,6 +298,7 @@ public class AuthServiceImpl {
     private UserSummaryDto toUserSummary(User user) {
         return UserSummaryDto.builder()
                 .id(user.getId())
+                .publicId(user.getPublicId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .mobile(user.getMobile())

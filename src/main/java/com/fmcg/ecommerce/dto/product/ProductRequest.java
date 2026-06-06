@@ -17,6 +17,7 @@ public class ProductRequest {
     @NotBlank(message = "SKU is required")
     private String sku;
     private String barcode;
+    private String itemCode;
     @NotNull(message = "Category is required")
     private Long categoryId;
     @NotNull(message = "Price is required")

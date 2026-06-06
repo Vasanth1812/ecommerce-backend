@@ -136,6 +136,28 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getOrderTimeline(id)));
     }
 
+    @GetMapping("/api/v1/admin/orders/substitutions")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Get list of order substitutions")
+    public ResponseEntity<ApiResponse<PagedResponse<Object>>> getSubstitutions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        org.springframework.data.domain.Page<Object> emptyPage = 
+            new org.springframework.data.domain.PageImpl<>(java.util.List.of(), org.springframework.data.domain.PageRequest.of(page, size), 0);
+        return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(emptyPage)));
+    }
+
+    @GetMapping("/api/v1/admin/orders/bulk-jobs")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: Get list of bulk order processing jobs")
+    public ResponseEntity<ApiResponse<PagedResponse<Object>>> getBulkJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        org.springframework.data.domain.Page<Object> emptyPage = 
+            new org.springframework.data.domain.PageImpl<>(java.util.List.of(), org.springframework.data.domain.PageRequest.of(page, size), 0);
+        return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(emptyPage)));
+    }
+
     @PostMapping("/api/v1/admin/orders/{id}/assign-partner")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin: Assign delivery fleets/riders to an order")

@@ -42,6 +42,7 @@ public class OrderServiceImpl {
     private final InventoryRepository inventoryRepository;
     private final LoyaltyAccountRepository loyaltyAccountRepository;
     private final UserRepository userRepository;
+    private final DeliveryPartnerRepository deliveryPartnerRepository;
     private final EmailServiceImpl emailService;
     private final CartServiceImpl cartService;
 
@@ -53,7 +54,7 @@ public class OrderServiceImpl {
             "PENDING", "CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURNED"
     );
 
-    // ── Create Order ──────────────────────────────────────
+    // â”€â”€ Create Order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
@@ -66,7 +67,7 @@ public class OrderServiceImpl {
         List<CartItem> cartItems = cartItemRepository.findByCartId(cart.getId());
         if (cartItems.isEmpty()) throw new BadRequestException("Your cart is empty");
 
-        // Validate address belongs to the user — use direct query to avoid lazy loading chain
+        // Validate address belongs to the user â€” use direct query to avoid lazy loading chain
         Address address = addressRepository.findById(request.getAddressId())
                 .orElseThrow(() -> new ResourceNotFoundException("Address", request.getAddressId()));
         Long addressUserId = addressRepository.findUserIdByAddressId(request.getAddressId());
@@ -144,7 +145,7 @@ public class OrderServiceImpl {
 
         orderRepository.save(savedOrder);
 
-        // Award loyalty points (1 point per ₹100 spent)
+        // Award loyalty points (1 point per â‚¹100 spent)
         int pointsEarned = total.intValue() / 100;
         if (pointsEarned > 0) {
             loyaltyAccountRepository.findByUserId(userId).ifPresent(la -> {
@@ -165,7 +166,7 @@ public class OrderServiceImpl {
         return toResponse(savedOrder);
     }
 
-    // ── Get User Orders ───────────────────────────────────
+    // â”€â”€ Get User Orders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional(readOnly = true)
     public Page<OrderResponse> getUserOrders(Long userId, String status, Pageable pageable) {
@@ -197,7 +198,7 @@ public class OrderServiceImpl {
         return toResponse(order);
     }
 
-    // ── Cancel Order ──────────────────────────────────────
+    // â”€â”€ Cancel Order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public OrderResponse cancelOrder(Long orderId, Long userId, String reason) {
@@ -231,7 +232,7 @@ public class OrderServiceImpl {
         return toResponse(orderRepository.save(order));
     }
 
-    // ── Reorder ───────────────────────────────────────────
+    // â”€â”€ Reorder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional
     public ReorderResponse reorder(Long orderId, Long userId) {
@@ -274,7 +275,7 @@ public class OrderServiceImpl {
 
         String message = added > 0
                 ? added + " item(s) added to your cart." + (skipped > 0 ? " " + skipped + " item(s) skipped (out of stock or unavailable)." : "")
-                : "No items could be added — all products are out of stock or unavailable.";
+                : "No items could be added â€” all products are out of stock or unavailable.";
 
         return ReorderResponse.builder()
                 .itemsAdded(added)
@@ -283,7 +284,7 @@ public class OrderServiceImpl {
                 .build();
     }
 
-    // ── Admin ─────────────────────────────────────────────
+    // â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Transactional(readOnly = true)
     public Page<OrderResponse> adminGetOrders(String status, String search,
@@ -332,7 +333,7 @@ public class OrderServiceImpl {
         return toResponse(saved);
     }
 
-    // ── Mapper ────────────────────────────────────────────
+    // â”€â”€ Mapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public OrderResponse toResponse(Order order) {
         List<OrderResponse.OrderItemResponse> items = order.getItems() == null ? List.of() :
@@ -361,6 +362,7 @@ public class OrderServiceImpl {
 
         return OrderResponse.builder()
                 .id(order.getId())
+                .publicId(order.getPublicId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())
                 .paymentMethod(order.getPaymentMethod())
@@ -375,14 +377,14 @@ public class OrderServiceImpl {
                 .deliveryAddress(snapshot)
                 .customerName(order.getUser().getName())
                 .customerEmail(order.getUser().getEmail())
-                .deliveryPartnerName(order.getDeliveryPartnerName())
+                .deliveryPartnerName(order.getDeliveryPartner() != null ? order.getDeliveryPartner().getUser().getName() : null)
                 .cancellationReason(order.getCancellationReason())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
     }
 
-    // ── Helpers ───────────────────────────────────────────
+    // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private String generateOrderNumber() {
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -440,8 +442,17 @@ public class OrderServiceImpl {
     public Object assignDeliveryPartner(Long orderId, String partnerId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        
+        DeliveryPartner partner = deliveryPartnerRepository.findById(Long.valueOf(partnerId))
+                .orElseThrow(() -> new ResourceNotFoundException("DeliveryPartner", Long.valueOf(partnerId)));
+        
+        partner.setAvailabilityStatus("ASSIGNED");
+        deliveryPartnerRepository.save(partner);
+        
+        order.setDeliveryPartner(partner);
         order.setStatus("PREPARING"); // Move to preparing when assigned
         orderRepository.save(order);
+        
         return java.util.Map.of("orderId", orderId, "partnerId", partnerId, "assignedAt", LocalDateTime.now(), "status", "ASSIGNED");
     }
 
