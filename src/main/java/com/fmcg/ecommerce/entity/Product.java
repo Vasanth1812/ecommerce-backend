@@ -40,7 +40,7 @@ public class Product {
     @Column(unique = true)
     private String barcode;
 
-    @Column(name = "item_code", unique = true)
+    @Column(name = "item_code", unique = true, nullable = false)
     private String itemCode;
 
     @NotBlank
