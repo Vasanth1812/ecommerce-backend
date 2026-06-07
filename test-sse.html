@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Notification Tester</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f4f4f9; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        #logs { background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 4px; height: 300px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>1. Enter the Delivery Boy's JWT Token</h2>
+        <input type="text" id="token" placeholder="Paste the Delivery Boy's Bearer Token here...">
+        <button onclick="connect()">Connect to Stream</button>
+        <button onclick="disconnect()" style="background: #dc3545;">Disconnect</button>
+    </div>
+
+    <div class="box">
+        <h2>2. Live Notifications Stream</h2>
+        <div id="logs">Waiting for connection...</div>
+    </div>
+
+    <!-- Include a polyfill so we can pass the Authorization header in EventSource -->
+    <script src="https://unpkg.com/@microsoft/fetch-event-source@2.0.1/lib/cjs/index.js"></script>
+    <script>
+        // Use a simple fetch workaround instead of complex imports
+        let abortController = null;
+
+        async function connect() {
+            const token = document.getElementById('token').value;
+            const logBox = document.getElementById('logs');
+            
+            if (!token) {
+                alert("Please paste the JWT token first!");
+                return;
+            }
+
+            logBox.innerHTML += '\n> Connecting to http://localhost:8080/api/v1/notifications/stream ...';
+            abortController = new AbortController();
+
+            try {
+                const response = await fetch('http://localhost:8080/api/v1/notifications/stream', {
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    signal: abortController.signal
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                logBox.innerHTML += '\n> Connected successfully! Listening for orders...\n';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    if (chunk.trim() !== '') {
+                        logBox.innerHTML += '\n[RECEIVED] ' + chunk;
+                        logBox.scrollTop = logBox.scrollHeight;
+                    }
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    logBox.innerHTML += '\n> Disconnected manually.';
+                } else {
+                    logBox.innerHTML += '\n> Error: ' + err.message;
+                }
+            }
+        }
+
+        function disconnect() {
+            if (abortController) {
+                abortController.abort();
+            }
+        }
+    </script>
+</body>
+</html>

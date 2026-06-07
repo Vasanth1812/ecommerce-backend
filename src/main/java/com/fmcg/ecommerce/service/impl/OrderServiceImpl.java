@@ -12,6 +12,8 @@ import com.fmcg.ecommerce.entity.*;
 import com.fmcg.ecommerce.exception.BadRequestException;
 import com.fmcg.ecommerce.exception.ResourceNotFoundException;
 import com.fmcg.ecommerce.repository.*;
+import com.fmcg.ecommerce.service.impl.SseNotificationService;
+import com.fmcg.ecommerce.entity.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,6 +39,7 @@ public class OrderServiceImpl {
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
+    private final SseNotificationService sseNotificationService;
     private final CartItemRepository cartItemRepository;
     private final AddressRepository addressRepository;
     private final InventoryRepository inventoryRepository;
@@ -452,6 +455,19 @@ public class OrderServiceImpl {
         order.setDeliveryPartner(partner);
         order.setStatus("PREPARING"); // Move to preparing when assigned
         orderRepository.save(order);
+        
+        // Send real-time SSE Notification to the Delivery Boy
+        if (partner.getUser() != null) {
+            Notification notification = Notification.builder()
+                    .user(partner.getUser())
+                    .title("New Order Assigned!")
+                    .message("You have been assigned order #" + order.getOrderNumber() + ". Please pick it up.")
+                    .type("ORDER")
+                    .referenceId(order.getPublicId())
+                    .isRead(false)
+                    .build();
+            sseNotificationService.sendNotification(partner.getUser().getId(), notification);
+        }
         
         return java.util.Map.of("orderId", orderId, "partnerId", partnerId, "assignedAt", LocalDateTime.now(), "status", "ASSIGNED");
     }

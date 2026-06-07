@@ -35,7 +35,7 @@ public class AdminPromotionController {
     private final AdminPromotionService adminPromotionService;
     private final UserRepository userRepository;
 
-    // ── Promotions ────────────────────────────────────────
+    // â”€â”€ Promotions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @GetMapping("/api/v1/promotions")
     @PreAuthorize("permitAll()")
@@ -80,7 +80,7 @@ public class AdminPromotionController {
         return ResponseEntity.ok(ApiResponse.ok("Promotion deleted"));
     }
 
-    // ── Coupons ───────────────────────────────────────────
+    // â”€â”€ Coupons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @GetMapping("/api/v1/admin/promotions/coupons")
     @Operation(summary = "Admin: List all coupons")
@@ -107,43 +107,6 @@ public class AdminPromotionController {
     public ResponseEntity<ApiResponse<String>> deleteCoupon(@PathVariable Long id) {
         promotionService.deleteCoupon(id);
         return ResponseEntity.ok(ApiResponse.ok("Coupon deleted"));
-    }
-
-    // ── Notifications ─────────────────────────────────────
-
-    @GetMapping("/api/v1/notifications")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Get my notifications")
-    public ResponseEntity<ApiResponse<PagedResponse<Notification>>> getNotifications(
-            Authentication auth,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        Long userId = userRepository.findByEmail(auth.getName())
-                .or(() -> userRepository.findByMobile(auth.getName()))
-                .map(u -> u.getId()).orElse(0L);
-        return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(
-                promotionService.getUserNotifications(userId, PageRequest.of(page, size)))));
-    }
-
-    @GetMapping("/api/v1/notifications/unread-count")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Get unread notification count")
-    public ResponseEntity<ApiResponse<Long>> getUnreadCount(Authentication auth) {
-        Long userId = userRepository.findByEmail(auth.getName())
-                .or(() -> userRepository.findByMobile(auth.getName()))
-                .map(u -> u.getId()).orElse(0L);
-        return ResponseEntity.ok(ApiResponse.ok(promotionService.getUnreadCount(userId)));
-    }
-
-    @PatchMapping("/api/v1/notifications/mark-all-read")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Mark all notifications as read")
-    public ResponseEntity<ApiResponse<String>> markAllRead(Authentication auth) {
-        Long userId = userRepository.findByEmail(auth.getName())
-                .or(() -> userRepository.findByMobile(auth.getName()))
-                .map(u -> u.getId()).orElse(0L);
-        promotionService.markAllAsRead(userId);
-        return ResponseEntity.ok(ApiResponse.ok("All notifications marked as read"));
     }
 
     // --- Flash Sales ---
