@@ -52,7 +52,7 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
     public CustomerAnalyticsDto getCustomerAnalytics() {
         // Return dummy data that matches the frontend metrics exactly!
         return CustomerAnalyticsDto.builder()
-                .clv("₹112,450")
+                .clv("â‚¹112,450")
                 .avgOrders("18.2")
                 .repeatRate("62.4%")
                 .avgDays("14")
@@ -77,11 +77,19 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
                 .build()).collect(Collectors.toList());
     }
 
-    @Override
+        @Override
     @Transactional
     public SupportTicketDto createTicket(SupportTicketDto dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", dto.getUserId()));
+        User user;
+        if (dto.getUserId() != null) {
+            user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new com.fmcg.ecommerce.exception.ResourceNotFoundException("User", dto.getUserId()));
+        } else if (dto.getUserEmail() != null && !dto.getUserEmail().isBlank()) {
+            user = userRepository.findByEmail(dto.getUserEmail())
+                    .orElseThrow(() -> new com.fmcg.ecommerce.exception.BadRequestException("No user found with email: " + dto.getUserEmail()));
+        } else {
+            throw new com.fmcg.ecommerce.exception.BadRequestException("Either userId or userEmail must be provided");
+        }
 
         SupportTicket ticket = SupportTicket.builder()
                 .user(user)

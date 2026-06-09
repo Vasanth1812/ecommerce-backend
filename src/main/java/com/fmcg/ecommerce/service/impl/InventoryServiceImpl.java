@@ -213,10 +213,24 @@ public class InventoryServiceImpl {
         return List.of(Map.of("productId", 1, "predictedDepletionDays", 14, "suggestedReorderQty", 200));
     }
 
-    public org.springframework.data.domain.Page<com.fmcg.ecommerce.entity.StockTransfer> getAllTransfers(org.springframework.data.domain.Pageable pageable) {
+        public org.springframework.data.domain.Page<com.fmcg.ecommerce.dto.inventory.StockTransferDto> getAllTransfers(org.springframework.data.domain.Pageable pageable) {
         com.fmcg.ecommerce.repository.StockTransferRepository stockTransferRepo = 
             (com.fmcg.ecommerce.repository.StockTransferRepository)((org.springframework.context.ApplicationContext)org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()
             .getAttribute("org.springframework.web.servlet.DispatcherServlet.CONTEXT", 0)).getBean(com.fmcg.ecommerce.repository.StockTransferRepository.class);
-        return stockTransferRepo.findAll(pageable);
+        return stockTransferRepo.findAll(pageable).map(transfer -> com.fmcg.ecommerce.dto.inventory.StockTransferDto.builder()
+                .id(transfer.getId())
+                .transferNumber(transfer.getTransferNumber())
+                .productId(transfer.getProduct() != null ? transfer.getProduct().getId() : null)
+                .productName(transfer.getProduct() != null ? transfer.getProduct().getTitle() : null)
+                .fromWarehouseId(transfer.getFromWarehouse() != null ? transfer.getFromWarehouse().getId() : null)
+                .fromWarehouseName(transfer.getFromWarehouse() != null ? transfer.getFromWarehouse().getName() : null)
+                .toWarehouseId(transfer.getToWarehouse() != null ? transfer.getToWarehouse().getId() : null)
+                .toWarehouseName(transfer.getToWarehouse() != null ? transfer.getToWarehouse().getName() : null)
+                .quantity(transfer.getQuantity())
+                .status(transfer.getStatus())
+                .notes(transfer.getNotes())
+                .createdAt(transfer.getCreatedAt())
+                .completedAt(transfer.getCompletedAt())
+                .build());
     }
 }
