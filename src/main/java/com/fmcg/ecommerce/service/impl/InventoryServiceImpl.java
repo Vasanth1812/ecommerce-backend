@@ -212,4 +212,11 @@ public class InventoryServiceImpl {
     public Object getForecastData() {
         return List.of(Map.of("productId", 1, "predictedDepletionDays", 14, "suggestedReorderQty", 200));
     }
+
+    public org.springframework.data.domain.Page<com.fmcg.ecommerce.entity.StockTransfer> getAllTransfers(org.springframework.data.domain.Pageable pageable) {
+        com.fmcg.ecommerce.repository.StockTransferRepository stockTransferRepo = 
+            (com.fmcg.ecommerce.repository.StockTransferRepository)((org.springframework.context.ApplicationContext)org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()
+            .getAttribute("org.springframework.web.servlet.DispatcherServlet.CONTEXT", 0)).getBean(com.fmcg.ecommerce.repository.StockTransferRepository.class);
+        return stockTransferRepo.findAll(pageable);
+    }
 }

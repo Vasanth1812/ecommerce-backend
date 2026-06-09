@@ -136,4 +136,13 @@ public class AdminInventoryController {
     public ResponseEntity<ApiResponse<Object>> getForecastData() {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.getForecastData()));
     }
+
+    @GetMapping("/transfers")
+    @Operation(summary = "Get list of all stock transfers")
+    public ResponseEntity<ApiResponse<PagedResponse<com.fmcg.ecommerce.entity.StockTransfer>>> getAllTransfers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(
+                inventoryService.getAllTransfers(PageRequest.of(page, size, Sort.by("createdAt").descending())))));
+    }
 }

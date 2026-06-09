@@ -32,7 +32,7 @@ public class ProductController {
     private final ProductServiceImpl productService;
     private final BulkImportServiceImpl bulkImportService;
 
-    // ── Public Product Endpoints ──────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Public Product Endpoints Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     @GetMapping("/api/v1/products")
     @Operation(summary = "Get all products with filters and pagination")
@@ -86,7 +86,7 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.ok(productService.compareProducts(ids)));
     }
 
-    // ── Admin Product Endpoints ───────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Admin Product Endpoints Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     @PostMapping("/api/v1/admin/products")
     @PreAuthorize("hasRole('ADMIN')")
@@ -124,9 +124,8 @@ public class ProductController {
     @PostMapping(value = "/api/v1/admin/products/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin: Bulk import products from CSV file")
-    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> importProducts(
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(ApiResponse.ok("Import complete", bulkImportService.importProductsFromCsv(file)));
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> importProducts(Authentication auth, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.ok("Import complete", bulkImportService.initiateProductImport(file, auth.getName())));
     }
 
     @GetMapping("/api/v1/admin/products/import/template")
@@ -190,7 +189,7 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.ok(productService.getProductAuditLogs(productId)));
     }
 
-    // ── SEO Management ────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ SEO Management Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     @GetMapping("/api/v1/admin/products/seo")
     @PreAuthorize("hasRole('ADMIN')")
