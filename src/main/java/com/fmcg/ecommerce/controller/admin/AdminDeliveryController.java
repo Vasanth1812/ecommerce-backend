@@ -31,11 +31,15 @@ public class AdminDeliveryController {
 
     @PostMapping("/delivery/riders")
     @Operation(summary = "Onboard a new delivery boy")
-    public ResponseEntity<ApiResponse<DeliveryPartnerDto>> onboardRider(@RequestBody Map<String, Object> payload) {
-        Long userId = Long.valueOf(payload.get("userId").toString());
+        public ResponseEntity<ApiResponse<DeliveryPartnerDto>> onboardRider(@RequestBody Map<String, Object> payload) {
+        String fullName = payload.getOrDefault("fullName", "").toString();
+        String phoneNumber = payload.getOrDefault("phoneNumber", "").toString();
         String vehicleType = payload.getOrDefault("vehicleType", "").toString();
         String vehicleNumber = payload.getOrDefault("vehicleNumber", "").toString();
-        return ResponseEntity.ok(ApiResponse.ok(deliveryService.onboardRider(userId, vehicleType, vehicleNumber)));
+        String zone = payload.getOrDefault("zone", "").toString();
+        String status = payload.getOrDefault("status", "Online").toString();
+        
+        return ResponseEntity.ok(ApiResponse.ok(deliveryService.onboardRider(fullName, phoneNumber, vehicleType, vehicleNumber, zone, status)));
     }
 
     // --- Live Tracking ---

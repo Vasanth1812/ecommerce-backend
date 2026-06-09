@@ -36,7 +36,8 @@ public class DeliveryPartner {
     private User user;
 
     private String vehicleType;
-    private String vehicleNumber;
+        private String vehicleNumber;
+    private String zone;
 
     @Builder.Default
     @Column(nullable = false)

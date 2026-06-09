@@ -25,65 +25,70 @@ public class AdminDeliveryServiceImpl implements AdminDeliveryService {
     private final DeliveryPartnerRepository deliveryPartnerRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     public List<DeliveryPartnerDto> getAllRiders() {
-        List<User> deliveryBoys = userRepository.findAll().stream()
-                .filter(u -> "DELIVERY_BOY".equals(u.getRole()))
-                .collect(Collectors.toList());
-
-        return deliveryBoys.stream().map(user -> {
-            DeliveryPartner dp = deliveryPartnerRepository.findByUserId(user.getId()).orElse(null);
-            return DeliveryPartnerDto.builder()
-                    .id(dp != null ? dp.getId() : null)
-                    .publicId(dp != null ? dp.getPublicId() : null)
-                    .userId(user.getId())
-                    .name(user.getName())
-                    .email(user.getEmail())
-                    .phone(user.getMobile())
-                    .vehicleType(dp != null ? dp.getVehicleType() : null)
-                    .vehicleNumber(dp != null ? dp.getVehicleNumber() : null)
-                    .availabilityStatus(dp != null ? dp.getAvailabilityStatus() : "OFFLINE")
-                    .currentLat(dp != null ? dp.getCurrentLat() : null)
-                    .currentLng(dp != null ? dp.getCurrentLng() : null)
-                    .lastLocationUpdate(dp != null ? dp.getLastLocationUpdate() : null)
-                    .build();
-        }).collect(Collectors.toList());
+        return deliveryPartnerRepository.findAll().stream().map(d -> DeliveryPartnerDto.builder()
+                .id(d.getId())
+                .publicId(d.getPublicId())
+                .userId(d.getUser() != null ? d.getUser().getId() : null)
+                .fullName(d.getUser() != null ? d.getUser().getName() : null)
+                .phoneNumber(d.getUser() != null ? d.getUser().getMobile() : null)
+                .vehicleType(d.getVehicleType())
+                .vehicleNumber(d.getVehicleNumber())
+                .zone(d.getZone())
+                .availabilityStatus(d.getAvailabilityStatus())
+                .currentLat(d.getCurrentLat())
+                .currentLng(d.getCurrentLng())
+                .build()).collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public DeliveryPartnerDto onboardRider(Long userId, String vehicleType, String vehicleNumber) {
-        if (deliveryPartnerRepository.findByUserId(userId).isPresent()) {
+    public DeliveryPartnerDto onboardRider(String fullName, String phoneNumber, String vehicleType, String vehicleNumber, String zone, String status) {
+        // Auto-create or fetch User
+        User user = userRepository.findByMobile(phoneNumber).orElseGet(() -> {
+            User newUser = User.builder()
+                    .name(fullName)
+                    .mobile(phoneNumber)
+                    .email(phoneNumber + "@delivery.local") // dummy email since it might be required
+                    .passwordHash(passwordEncoder.encode("123456"))
+                    .role("DELIVERY_BOY")
+                    .build();
+            return userRepository.save(newUser);
+        });
+
+        // Ensure role is set
+        if (!"DELIVERY_BOY".equals(user.getRole())) {
+            user.setRole("DELIVERY_BOY");
+            userRepository.save(user);
+        }
+
+        if (deliveryPartnerRepository.findByUserId(user.getId()).isPresent()) {
             throw new BadRequestException("User is already a delivery partner");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
-        
-        // Ensure user has DELIVERY_BOY role (or add it)
-        user.setRole("DELIVERY_BOY");
-        userRepository.save(user);
-
-        DeliveryPartner dp = DeliveryPartner.builder()
+        DeliveryPartner partner = DeliveryPartner.builder()
                 .user(user)
                 .vehicleType(vehicleType)
                 .vehicleNumber(vehicleNumber)
-                .availabilityStatus("FREE")
+                .zone(zone)
+                .availabilityStatus(status != null && !status.isBlank() ? status : "FREE")
                 .build();
         
-        dp = deliveryPartnerRepository.save(dp);
+        partner = deliveryPartnerRepository.save(partner);
 
         return DeliveryPartnerDto.builder()
-                .id(dp.getId())
-                .publicId(dp.getPublicId())
-                .userId(dp.getUser().getId())
-                .name(dp.getUser().getName())
-                .email(dp.getUser().getEmail())
-                .phone(dp.getUser().getMobile())
-                .vehicleType(dp.getVehicleType())
-                .vehicleNumber(dp.getVehicleNumber())
-                .availabilityStatus(dp.getAvailabilityStatus())
+                .id(partner.getId())
+                .publicId(partner.getPublicId())
+                .userId(partner.getUser().getId())
+                .fullName(partner.getUser().getName())
+                .phoneNumber(partner.getUser().getMobile())
+                .vehicleType(partner.getVehicleType())
+                .vehicleNumber(partner.getVehicleNumber())
+                .zone(partner.getZone())
+                .availabilityStatus(partner.getAvailabilityStatus())
                 .build();
     }
 

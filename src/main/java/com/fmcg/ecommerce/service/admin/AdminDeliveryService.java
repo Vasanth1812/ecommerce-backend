@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface AdminDeliveryService {
     List<DeliveryPartnerDto> getAllRiders();
-    DeliveryPartnerDto onboardRider(Long userId, String vehicleType, String vehicleNumber);
+        DeliveryPartnerDto onboardRider(String fullName, String phoneNumber, String vehicleType, String vehicleNumber, String zone, String status);
     void updateRiderLocation(Long riderId, Double lat, Double lng);
     Object markOrderDelivered(Long orderId);
 }
