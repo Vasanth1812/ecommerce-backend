@@ -1,12 +1,12 @@
 package com.fmcg.ecommerce.service.admin;
 
-import com.fmcg.ecommerce.dto.delivery.DeliveryPartnerDto;
+import com.fmcg.ecommerce.dto.delivery.DeliveryBoyDto;
 
 import java.util.List;
 
 public interface AdminDeliveryService {
-    List<DeliveryPartnerDto> getAllRiders();
-        DeliveryPartnerDto onboardRider(String fullName, String phoneNumber, String vehicleType, String vehicleNumber, String zone, String status);
+    List<DeliveryBoyDto> getAllRiders();
+        
     void updateRiderLocation(Long riderId, Double lat, Double lng);
     Object markOrderDelivered(Long orderId);
 }

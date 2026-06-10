@@ -1,7 +1,7 @@
 package com.fmcg.ecommerce.controller.admin;
 
 import com.fmcg.ecommerce.common.ApiResponse;
-import com.fmcg.ecommerce.dto.delivery.DeliveryPartnerDto;
+import com.fmcg.ecommerce.dto.delivery.DeliveryBoyDto;
 import com.fmcg.ecommerce.service.admin.AdminDeliveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,22 +25,11 @@ public class AdminDeliveryController {
     // --- Delivery Partners ---
     @GetMapping("/delivery/riders")
     @Operation(summary = "List all delivery boys and their current status")
-    public ResponseEntity<ApiResponse<List<DeliveryPartnerDto>>> getAllRiders() {
+    public ResponseEntity<ApiResponse<List<DeliveryBoyDto>>> getAllRiders() {
         return ResponseEntity.ok(ApiResponse.ok(deliveryService.getAllRiders()));
     }
 
-    @PostMapping("/delivery/riders")
-    @Operation(summary = "Onboard a new delivery boy")
-        public ResponseEntity<ApiResponse<DeliveryPartnerDto>> onboardRider(@RequestBody Map<String, Object> payload) {
-        String fullName = payload.getOrDefault("fullName", "").toString();
-        String phoneNumber = payload.getOrDefault("phoneNumber", "").toString();
-        String vehicleType = payload.getOrDefault("vehicleType", "").toString();
-        String vehicleNumber = payload.getOrDefault("vehicleNumber", "").toString();
-        String zone = payload.getOrDefault("zone", "").toString();
-        String status = payload.getOrDefault("status", "Online").toString();
-        
-        return ResponseEntity.ok(ApiResponse.ok(deliveryService.onboardRider(fullName, phoneNumber, vehicleType, vehicleNumber, zone, status)));
-    }
+    
 
     // --- Live Tracking ---
     @PutMapping("/delivery/live-tracking")

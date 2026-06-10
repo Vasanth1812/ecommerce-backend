@@ -30,7 +30,7 @@ public class OrderResponse {
     private AddressSnapshot deliveryAddress;
     private String customerName;
     private String customerEmail;
-    private String deliveryPartnerName;
+    private String deliveryBoyName;
     private String cancellationReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

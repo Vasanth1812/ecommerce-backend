@@ -164,7 +164,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Object>> assignDeliveryPartner(
             @PathVariable Long id,
             @RequestParam String partnerId) {
-        return ResponseEntity.ok(ApiResponse.ok(orderService.assignDeliveryPartner(id, partnerId)));
+        return ResponseEntity.ok(ApiResponse.ok(orderService.assignDeliveryBoy(id, partnerId)));
     }
 
     @PostMapping("/api/v1/admin/orders/{id}/substitute")

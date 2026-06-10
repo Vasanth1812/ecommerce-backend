@@ -21,5 +21,10 @@ public class RegisterRequest {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
     
-    private String role; // CUSTOMER, VENDOR, DELIVERY_BOY, etc.
+        private String role; // CUSTOMER, VENDOR, DELIVERY_BOY, etc.
+
+    // Delivery Boy fields
+    private String vehicleType;
+    private String vehicleNumber;
+    private String zone;
 }
