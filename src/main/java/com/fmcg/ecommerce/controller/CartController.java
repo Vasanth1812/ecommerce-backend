@@ -66,4 +66,9 @@ public class CartController {
     public ResponseEntity<ApiResponse<CartResponse>> removeCoupon(Authentication auth) {
         return ResponseEntity.ok(ApiResponse.ok("Coupon removed", cartService.removeCoupon(getUserId(auth))));
     }
+    @GetMapping("/coupons")
+    @Operation(summary = "Get available coupons for the current user")
+    public ResponseEntity<ApiResponse<java.util.List<CouponResponse>>> getAvailableCoupons(Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.ok(cartService.getAvailableCoupons(getUserId(auth))));
+    }
 }

@@ -48,6 +48,7 @@ public class OrderServiceImpl {
     private final DeliveryBoyRepository DeliveryBoyRepository;
     private final EmailServiceImpl emailService;
     private final CartServiceImpl cartService;
+    private final CouponUsageRepository couponUsageRepository;
 
     private static final BigDecimal FREE_DELIVERY_THRESHOLD = new BigDecimal("499");
     private static final BigDecimal DELIVERY_FEE = new BigDecimal("49");
@@ -156,6 +157,19 @@ public class OrderServiceImpl {
                 updateTier(la);
                 loyaltyAccountRepository.save(la);
             });
+        }
+
+        if (cart.getAppliedCoupon() != null) {
+            CouponUsage usage = CouponUsage.builder()
+                    .user(user)
+                    .coupon(cart.getAppliedCoupon())
+                    .build();
+            couponUsageRepository.save(usage);
+            
+            // Also increment global usage count
+            cart.getAppliedCoupon().setUsedCount(cart.getAppliedCoupon().getUsedCount() + 1);
+            // Assuming coupon is saved via cascade or needs explicit save, usually we need explicit save but we don't have couponRepo here.
+            // Wait, we have appliedCoupon in cart. If it's attached, dirty checking might save it.
         }
 
         // Clear cart

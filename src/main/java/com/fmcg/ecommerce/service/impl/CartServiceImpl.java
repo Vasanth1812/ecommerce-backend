@@ -26,6 +26,7 @@ public class CartServiceImpl {
     private final InventoryRepository inventoryRepository;
     private final CouponRepository couponRepository;
     private final UserRepository userRepository;
+    private final CouponUsageRepository couponUsageRepository;
 
     private static final BigDecimal FREE_DELIVERY_THRESHOLD = new BigDecimal("499");
     private static final BigDecimal DELIVERY_FEE = new BigDecimal("49");
@@ -136,9 +137,13 @@ public class CartServiceImpl {
         if (coupon.getMaxUses() != null && coupon.getMaxUses() > 0 && coupon.getUsedCount() >= coupon.getMaxUses())
             throw new BadRequestException("Coupon usage limit reached");
 
+        if (couponUsageRepository.existsByUserIdAndCouponId(userId, coupon.getId())) {
+            throw new BadRequestException("You have already used this coupon");
+        }
+
         BigDecimal subtotal = calculateSubtotal(cart);
         if (coupon.getMinOrder() != null && subtotal.compareTo(coupon.getMinOrder()) < 0) {
-            throw new BadRequestException("Minimum order of ₹" + coupon.getMinOrder() + " required for this coupon");
+            throw new BadRequestException("Minimum order of â‚¹" + coupon.getMinOrder() + " required for this coupon");
         }
 
         BigDecimal discount = calculateCouponDiscount(coupon, subtotal);
@@ -171,7 +176,7 @@ public class CartServiceImpl {
         });
     }
 
-    // ── Helpers ──────────────────────────────────────────
+    // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private CartResponse buildCartResponse(Cart cart) {
         List<CartItem> items = cartItemRepository.findByCartId(cart.getId());
@@ -264,5 +269,34 @@ public class CartServiceImpl {
                 .or(() -> userRepository.findByMobile(email))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"))
                 .getId();
+    }
+    @Transactional(readOnly = true)
+    public List<CouponResponse> getAvailableCoupons(Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        List<Coupon> allCoupons = couponRepository.findAll();
+        
+        return allCoupons.stream()
+                .filter(c -> Boolean.TRUE.equals(c.getIsActive()))
+                .filter(c -> c.getValidFrom() == null || !now.isBefore(c.getValidFrom()))
+                .filter(c -> c.getValidUntil() == null || !now.isAfter(c.getValidUntil()))
+                .filter(c -> c.getMaxUses() == null || c.getMaxUses() == 0 || c.getUsedCount() < c.getMaxUses())
+                .filter(c -> !couponUsageRepository.existsByUserIdAndCouponId(userId, c.getId()))
+                .map(c -> {
+                    String description;
+                    if (c.getMinOrder() != null && c.getMinOrder().compareTo(BigDecimal.ZERO) > 0) {
+                        description = "This coupon requires minimum order ₹" + c.getMinOrder() + " for this coupon " + c.getCode();
+                    } else {
+                        description = "Apply " + c.getCode() + " for a discount!";
+                    }
+                    return CouponResponse.builder()
+                            .code(c.getCode())
+                            .type(c.getType())
+                            .discountValue(c.getDiscountValue())
+                            .discountType(c.getDiscountType())
+                            .minOrder(c.getMinOrder())
+                            .description(description)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }
