@@ -81,7 +81,13 @@ public class OrderServiceImpl {
 
         // Calculate totals
         BigDecimal subtotal = cartItems.stream()
-                .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQty())))
+                .map(i -> {
+                    int chargeableQty = i.getQty();
+                    if (Boolean.TRUE.equals(i.getProduct().getIsBogoActive())) {
+                        chargeableQty = i.getQty() - (i.getQty() / 2);
+                    }
+                    return i.getProduct().getEffectivePrice().multiply(BigDecimal.valueOf(chargeableQty));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal couponDiscount = cart.getCouponDiscount() != null ? cart.getCouponDiscount() : BigDecimal.ZERO;
@@ -125,15 +131,23 @@ public class OrderServiceImpl {
         Order savedOrder = orderRepository.save(order);
 
         // Create order items
-        List<OrderItem> orderItems = new java.util.ArrayList<>(cartItems.stream().map(ci -> OrderItem.builder()
+        List<OrderItem> orderItems = new java.util.ArrayList<>(cartItems.stream().map(ci -> {
+            BigDecimal itemDiscount = BigDecimal.ZERO;
+            if (Boolean.TRUE.equals(ci.getProduct().getIsBogoActive())) {
+                int freeQty = ci.getQty() / 2;
+                itemDiscount = ci.getProduct().getEffectivePrice().multiply(BigDecimal.valueOf(freeQty));
+            }
+            
+            return OrderItem.builder()
                 .order(savedOrder)
                 .product(ci.getProduct())
                 .productTitle(ci.getProduct().getTitle())
                 .sku(ci.getSku())
                 .qty(ci.getQty())
-                .unitPrice(ci.getUnitPrice())
-                .discount(BigDecimal.ZERO)
-                .build()).collect(Collectors.toList()));
+                .unitPrice(ci.getProduct().getEffectivePrice())
+                .discount(itemDiscount)
+                .build();
+        }).collect(Collectors.toList()));
         savedOrder.setItems(orderItems);
 
         // Add status history

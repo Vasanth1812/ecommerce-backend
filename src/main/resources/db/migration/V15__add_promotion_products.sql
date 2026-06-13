@@ -1,0 +1,2 @@
+-- Hibernate already generated this schema via ddl-auto=update.
+-- Leaving this script empty so Flyway registers the version successfully without crashing.

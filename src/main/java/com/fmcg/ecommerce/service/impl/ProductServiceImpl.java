@@ -222,6 +222,39 @@ public class ProductServiceImpl {
                                 .build())
                         .collect(Collectors.toList());
 
+        BigDecimal finalDiscountPrice = null;
+        String finalPromotionName = null;
+
+        if (product.getPromotions() != null && !product.getPromotions().isEmpty()) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            BigDecimal lowestPrice = product.getPrice();
+
+            for (com.fmcg.ecommerce.entity.Promotion promo : product.getPromotions()) {
+                if ("ACTIVE".equals(promo.getStatus()) &&
+                        (promo.getStartDate() == null || !now.isBefore(promo.getStartDate())) &&
+                        (promo.getEndDate() == null || !now.isAfter(promo.getEndDate()))) {
+
+                    BigDecimal candidatePrice = product.getPrice();
+                    if ("PERCENTAGE".equals(promo.getDiscountType()) && promo.getDiscountValue() != null) {
+                        BigDecimal discountAmount = product.getPrice().multiply(promo.getDiscountValue().divide(BigDecimal.valueOf(100)));
+                        candidatePrice = product.getPrice().subtract(discountAmount);
+                    } else if ("FIXED".equals(promo.getDiscountType()) && promo.getDiscountValue() != null) {
+                        candidatePrice = product.getPrice().subtract(promo.getDiscountValue());
+                    }
+
+                    if (candidatePrice.compareTo(BigDecimal.ZERO) < 0) {
+                        candidatePrice = BigDecimal.ZERO;
+                    }
+
+                    if (candidatePrice.compareTo(lowestPrice) < 0) {
+                        lowestPrice = candidatePrice;
+                        finalDiscountPrice = candidatePrice;
+                        finalPromotionName = promo.getName();
+                    }
+                }
+            }
+        }
+
         return ProductResponse.builder()
                 .id(product.getId())
                 .publicId(product.getPublicId())
@@ -235,6 +268,8 @@ public class ProductServiceImpl {
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
                 .price(product.getPrice())
+                .discountPrice(finalDiscountPrice)
+                .activePromotionName(finalPromotionName)
                 .mrp(product.getMrp())
                 .costPrice(product.getCostPrice())
                 .taxRate(product.getTaxRate())

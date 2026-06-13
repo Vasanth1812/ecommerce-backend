@@ -191,6 +191,49 @@ public class CartServiceImpl {
                         .findFirst().orElse(p.getImages().get(0)).getUrl()
                     : null;
 
+            BigDecimal finalDiscountPrice = null;
+            String finalPromotionName = null;
+            BigDecimal effectiveUnitPrice = item.getUnitPrice();
+
+            if (p.getPromotions() != null && !p.getPromotions().isEmpty()) {
+                java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                BigDecimal lowestPrice = p.getPrice();
+
+                for (com.fmcg.ecommerce.entity.Promotion promo : p.getPromotions()) {
+                    if ("ACTIVE".equals(promo.getStatus()) &&
+                            (promo.getStartDate() == null || !now.isBefore(promo.getStartDate())) &&
+                            (promo.getEndDate() == null || !now.isAfter(promo.getEndDate()))) {
+
+                        BigDecimal candidatePrice = p.getPrice();
+                        if ("PERCENTAGE".equals(promo.getDiscountType()) && promo.getDiscountValue() != null) {
+                            BigDecimal discountAmount = p.getPrice().multiply(promo.getDiscountValue().divide(BigDecimal.valueOf(100)));
+                            candidatePrice = p.getPrice().subtract(discountAmount);
+                        } else if ("FIXED".equals(promo.getDiscountType()) && promo.getDiscountValue() != null) {
+                            candidatePrice = p.getPrice().subtract(promo.getDiscountValue());
+                        }
+
+                        if (candidatePrice.compareTo(BigDecimal.ZERO) < 0) {
+                            candidatePrice = BigDecimal.ZERO;
+                        }
+
+                        if (candidatePrice.compareTo(lowestPrice) < 0) {
+                            lowestPrice = candidatePrice;
+                            finalDiscountPrice = candidatePrice;
+                            finalPromotionName = promo.getName();
+                            effectiveUnitPrice = candidatePrice;
+                        }
+                    }
+                }
+            }
+
+            BigDecimal itemTotal;
+            if (Boolean.TRUE.equals(p.getIsBogoActive())) {
+                int chargeableQty = item.getQty() - (item.getQty() / 2);
+                itemTotal = effectiveUnitPrice.multiply(BigDecimal.valueOf(chargeableQty));
+            } else {
+                itemTotal = effectiveUnitPrice.multiply(BigDecimal.valueOf(item.getQty()));
+            }
+
             return CartItemResponse.builder()
                     .id(item.getId())
                     .productId(p.getId())
@@ -200,11 +243,14 @@ public class CartServiceImpl {
                     .brand(p.getBrand())
                     .unit(p.getUnit())
                     .qty(item.getQty())
-                    .unitPrice(item.getUnitPrice())
+                    .unitPrice(effectiveUnitPrice)
+                    .discountPrice(finalDiscountPrice)
+                    .activePromotionName(finalPromotionName)
                     .mrp(p.getMrp())
-                    .total(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQty())))
+                    .total(itemTotal)
                     .stockStatus(stockStatus)
                     .maxQty(maxQty)
+                    .isBogoActive(p.getIsBogoActive())
                     .build();
         }).collect(Collectors.toList());
 
@@ -237,7 +283,13 @@ public class CartServiceImpl {
 
     private BigDecimal calculateSubtotal(Cart cart) {
         return cartItemRepository.findByCartId(cart.getId()).stream()
-                .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQty())))
+                .map(i -> {
+                    int chargeableQty = i.getQty();
+                    if (Boolean.TRUE.equals(i.getProduct().getIsBogoActive())) {
+                        chargeableQty = i.getQty() - (i.getQty() / 2);
+                    }
+                    return i.getProduct().getEffectivePrice().multiply(BigDecimal.valueOf(chargeableQty));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -279,7 +331,7 @@ public class CartServiceImpl {
                 .filter(c -> Boolean.TRUE.equals(c.getIsActive()))
                 .filter(c -> c.getValidFrom() == null || !now.isBefore(c.getValidFrom()))
                 .filter(c -> c.getValidUntil() == null || !now.isAfter(c.getValidUntil()))
-                .filter(c -> c.getMaxUses() == null || c.getMaxUses() == 0 || c.getUsedCount() < c.getMaxUses())
+                .filter(c -> c.getMaxUses() == null || c.getMaxUses() <= 0 || c.getUsedCount() < c.getMaxUses())
                 .filter(c -> !couponUsageRepository.existsByUserIdAndCouponId(userId, c.getId()))
                 .map(c -> {
                     String description;

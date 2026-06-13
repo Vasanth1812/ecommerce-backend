@@ -44,6 +44,9 @@ public class User {
     @JsonIgnore
     private String passwordHash;
 
+    @Column(unique = true)
+    private String referralCode;
+
     @Builder.Default
     @Column(nullable = false)
     private String role = "CUSTOMER"; // CUSTOMER / ADMIN / VENDOR

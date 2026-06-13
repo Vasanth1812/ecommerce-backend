@@ -21,8 +21,11 @@ public class CartItemResponse {
     private String unit;
     private Integer qty;
     private BigDecimal unitPrice;
+    private BigDecimal discountPrice;
+    private String activePromotionName;
     private BigDecimal mrp;
     private BigDecimal total;
     private String stockStatus;
     private Integer maxQty;
+    private Boolean isBogoActive;
 }

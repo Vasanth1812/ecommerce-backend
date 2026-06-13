@@ -58,6 +58,16 @@ public class Promotion {
     @Column(precision = 10, scale = 2)
     private BigDecimal minOrder;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "promotion_products",
+            joinColumns = @JoinColumn(name = "promotion_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private java.util.List<Product> eligibleProducts;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

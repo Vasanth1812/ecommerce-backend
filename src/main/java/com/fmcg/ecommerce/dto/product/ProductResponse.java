@@ -26,6 +26,8 @@ public class ProductResponse {
     private Long categoryId;
     private String categoryName;
     private BigDecimal price;
+    private BigDecimal discountPrice;
+    private String activePromotionName;
     private BigDecimal mrp;
     private BigDecimal costPrice;
     private BigDecimal taxRate;

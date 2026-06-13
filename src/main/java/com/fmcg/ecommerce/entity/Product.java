@@ -92,6 +92,9 @@ public class Product {
 
     private String supplier;
 
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isBogoActive = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -99,7 +102,12 @@ public class Product {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Relationships Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    @ManyToMany(mappedBy = "eligibleProducts", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private java.util.List<Promotion> promotions;
+
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
@@ -107,4 +115,38 @@ public class Product {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<ProductImage> images = new ArrayList<>();
+
+    // --- Helper Methods ---
+
+    @Transient
+    public BigDecimal getEffectivePrice() {
+        if (promotions == null || promotions.isEmpty()) return price;
+        
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        BigDecimal lowestPrice = price;
+
+        for (Promotion promo : promotions) {
+            if ("ACTIVE".equals(promo.getStatus()) &&
+                    (promo.getStartDate() == null || !now.isBefore(promo.getStartDate())) &&
+                    (promo.getEndDate() == null || !now.isAfter(promo.getEndDate()))) {
+
+                BigDecimal candidatePrice = price;
+                if ("PERCENTAGE".equals(promo.getDiscountType()) && promo.getDiscountValue() != null) {
+                    BigDecimal discountAmount = price.multiply(promo.getDiscountValue().divide(BigDecimal.valueOf(100)));
+                    candidatePrice = price.subtract(discountAmount);
+                } else if ("FIXED".equals(promo.getDiscountType()) && promo.getDiscountValue() != null) {
+                    candidatePrice = price.subtract(promo.getDiscountValue());
+                }
+
+                if (candidatePrice.compareTo(BigDecimal.ZERO) < 0) {
+                    candidatePrice = BigDecimal.ZERO;
+                }
+
+                if (candidatePrice.compareTo(lowestPrice) < 0) {
+                    lowestPrice = candidatePrice;
+                }
+            }
+        }
+        return lowestPrice;
+    }
 }
