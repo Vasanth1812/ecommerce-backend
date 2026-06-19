@@ -63,7 +63,8 @@ public class SecurityConfig {
             "http://localhost:3000", 
             "http://localhost:8080", 
             "http://localhost:8081", 
-            "https://ecommerce-backend-1-zdlm.onrender.com"
+            "https://ecommerce-backend-1-zdlm.onrender.com",
+            "*"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
